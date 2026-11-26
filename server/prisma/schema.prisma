@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model books {
+  id             String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  title          String        @db.VarChar(500)
+  author         String        @db.VarChar(255)
+  isbn           String?       @unique @db.VarChar(20)
+  genre_id       Int?
+  price          Decimal       @db.Decimal(10, 2)
+  original_price Decimal?      @db.Decimal(10, 2)
+  stock          Int?          @default(0)
+  description    String?
+  cover_url      String?
+  publisher      String?       @db.VarChar(255)
+  published_year Int?
+  pages          Int?
+  language       String?       @default("English") @db.VarChar(50)
+  featured       Boolean?      @default(false)
+  bestseller     Boolean?      @default(false)
+  new_arrival    Boolean?      @default(false)
+  average_rating Decimal?      @default(0) @db.Decimal(3, 2)
+  review_count   Int?          @default(0)
+  created_at     DateTime?     @default(now()) @db.Timestamp(6)
+  updated_at     DateTime?     @default(now()) @db.Timestamp(6)
+  genres         genres?       @relation(fields: [genre_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  cart_items     cart_items[]
+  order_items    order_items[]
+  reviews        reviews[]
+  wishlist       wishlist[]
+}
+
+model cart_items {
+  id       Int       @id @default(autoincrement())
+  user_id  String?   @db.Uuid
+  book_id  String?   @db.Uuid
+  quantity Int       @default(1)
+  added_at DateTime? @default(now()) @db.Timestamp(6)
+  books    books?    @relation(fields: [book_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users    users?    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, book_id])
+}
+
+model genres {
+  id          Int     @id @default(autoincrement())
+  name        String  @unique @db.VarChar(100)
+  slug        String  @unique @db.VarChar(100)
+  description String?
+  color       String? @default("#000000") @db.VarChar(7)
+  books       books[]
+}
+
+model order_items {
+  id         Int     @id @default(autoincrement())
+  order_id   String? @db.Uuid
+  book_id    String? @db.Uuid
+  quantity   Int
+  unit_price Decimal @db.Decimal(10, 2)
+  books      books?  @relation(fields: [book_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  orders     orders? @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model orders {
+  id                  String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id             String?       @db.Uuid
+  status              String?       @default("pending") @db.VarChar(30)
+  total_price         Decimal       @db.Decimal(10, 2)
+  shipping_address    Json?
+  payment_method      String?       @db.VarChar(50)
+  payment_status      String?       @default("unpaid") @db.VarChar(20)
+  notes               String?
+  created_at          DateTime?     @default(now()) @db.Timestamp(6)
+  updated_at          DateTime?     @default(now()) @db.Timestamp(6)
+  checkout_session_id String?
+  order_items         order_items[]
+  users               users?        @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model reviews {
+  id         String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id    String?   @db.Uuid
+  book_id    String?   @db.Uuid
+  rating     Int?
+  comment    String?
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  books      books?    @relation(fields: [book_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      users?    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, book_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model users {
+  id                 String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name               String       @db.VarChar(255)
+  email              String       @unique @db.VarChar(255)
+  password_hash      String       @db.VarChar(255)
+  role               String?      @default("user") @db.VarChar(20)
+  avatar_url         String?
+  created_at         DateTime?    @default(now()) @db.Timestamp(6)
+  updated_at         DateTime?    @default(now()) @db.Timestamp(6)
+  email_verified     Boolean?     @default(false)
+  verification_token String?      @db.VarChar(255)
+  cart_items         cart_items[]
+  orders             orders[]
+  reviews            reviews[]
+  wishlist           wishlist[]
+}
+
+model wishlist {
+  id       Int       @id @default(autoincrement())
+  user_id  String?   @db.Uuid
+  book_id  String?   @db.Uuid
+  added_at DateTime? @default(now()) @db.Timestamp(6)
+  books    books?    @relation(fields: [book_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users    users?    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, book_id])
+}
