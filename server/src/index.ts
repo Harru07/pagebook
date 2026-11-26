@@ -1,17 +1,30 @@
 import "dotenv/config";
-import express from "express";
+import express, { NextFunction, Request, Response } from "express";
 import cors from "cors";
-import { PrismaClient } from "./generated/prisma/client";
+import { prisma } from "./lib/prisma";
+import authRoutes from "./routes/auth";
 
-const prisma = new PrismaClient();
+if (!process.env.JWT_SECRET) {
+  throw new Error("JWT_SECRET is not set. Add it to server/.env");
+}
+
 const app = express();
 
-app.use(cors({ origin: "http://localhost:5173" }));
+app.use(cors({ origin: process.env.FRONTEND_URL || "http://localhost:5173" }));
 app.use(express.json());
 
 app.get("/api/health", async (_req, res) => {
   const books = await prisma.books.count();
   res.json({ status: "OK", books });
+});
+
+app.use("/api/auth", authRoutes);
+
+app.use((_req, res) => res.status(404).json({ error: "Route not found" }));
+
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  console.error(err);
+  res.status(500).json({ error: "Internal server error" });
 });
 
 const port = Number(process.env.PORT) || 5002;
