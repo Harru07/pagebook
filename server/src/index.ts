@@ -4,8 +4,10 @@ import cors from "cors";
 import { prisma } from "./lib/prisma";
 import authRoutes from "./routes/auth";
 import booksRoutes from "./routes/books";
+import reviewsRoutes from "./routes/reviews";
 import genresRoutes from "./routes/genres";
 import cartRoutes from "./routes/cart";
+import wishlistRoutes from "./routes/wishlist";
 import ordersRoutes from "./routes/orders";
 import adminOrdersRoutes from "./routes/adminOrders";
 
@@ -25,8 +27,10 @@ app.get("/api/health", async (_req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/books", booksRoutes);
+app.use("/api/books", reviewsRoutes); // /api/books/:id/reviews
 app.use("/api/genres", genresRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/orders", ordersRoutes);
 app.use("/api/admin/orders", adminOrdersRoutes);
 
