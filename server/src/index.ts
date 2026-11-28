@@ -7,6 +7,7 @@ import booksRoutes from "./routes/books";
 import genresRoutes from "./routes/genres";
 import cartRoutes from "./routes/cart";
 import ordersRoutes from "./routes/orders";
+import adminOrdersRoutes from "./routes/adminOrders";
 
 if (!process.env.JWT_SECRET) {
   throw new Error("JWT_SECRET is not set. Add it to server/.env");
@@ -27,6 +28,7 @@ app.use("/api/books", booksRoutes);
 app.use("/api/genres", genresRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", ordersRoutes);
+app.use("/api/admin/orders", adminOrdersRoutes);
 
 app.use((_req, res) => res.status(404).json({ error: "Route not found" }));
 
